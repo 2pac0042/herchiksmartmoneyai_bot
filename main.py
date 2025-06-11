@@ -1,23 +1,3 @@
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-import os
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user.first_name
-    keyboard = [["💳 Купить доступ", "📩 Поддержка"]]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text(f"Привет, {user}! 👋 Добро пожаловать в умного бота по трейдингу.", reply_markup=reply_markup)
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("💬 По всем вопросам: @forex0042")
-
-if name == "__main__":
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.run_polling()
 import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
@@ -63,5 +43,5 @@ async def courses_handler(message: types.Message):
     await message.answer("🎓 Курсы пока недоступны. Следите за обновлениями!")
 
 # Запуск бота
-if __name__ == '__main__':
+if name == '__main__':
     executor.start_polling(dp, skip_updates=True)
