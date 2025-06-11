@@ -1,27 +1,31 @@
-import os
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import telebot
+from flask import Flask, request
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = '8040390729:AAEr0iktkA-6yLBrtgGOwxFR6QbA7gl4F4M'
+bot = telebot.TeleBot(TOKEN)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user.first_name
-    menu = [["💳 Оплатить картой (HUMO)"], ["💸 Click (QR-код)"], ["📞 Поддержка"]]
-    reply_markup = ReplyKeyboardMarkup(menu, resize_keyboard=True)
-    await update.message.reply_text(f"Привет, {user}! Добро пожаловать в Herchik Smart AI 🤖", reply_markup=reply_markup)
+app = Flask(__name__)
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Напиши @forex0042 по всем вопросам поддержки.")
+# Стартовое сообщение
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    bot.send_message(message.chat.id, "Добро пожаловать в Herchik Smart Money AI бот 💸")
 
-async def access(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Чтобы получить доступ:\n\n1 месяц — 99,000 сум\n3 месяца — 199,000 сум\nLifetime — 499,000 сум\n\nОплати удобным способом и напиши @forex0042.")
+# Простой ответ на текст
+@bot.message_handler(func=lambda message: True)
+def echo_all(message):
+    bot.send_message(message.chat.id, f"Вы написали: {message.text}")
 
-def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("доступ", access))
-    app.run_polling()
+# Webhook обработка
+@app.route('/', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return '', 200
+    else:
+        return '!', 403
 
-if name == '__main__':
-    main()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080)
