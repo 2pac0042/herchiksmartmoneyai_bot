@@ -1,31 +1,30 @@
-import telebot
-from flask import Flask, request
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.utils import executor
+import logging
+import os
 
-TOKEN = '8040390729:AAEr0iktkA-6yLBrtgGOwxFR6QbA7gl4F4M'
-bot = telebot.TeleBot(TOKEN)
+API_TOKEN = os.getenv("BOT_TOKEN")
 
-app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
-# Стартовое сообщение
-@bot.message_handler(commands=['start'])
-def start_message(message):
-    bot.send_message(message.chat.id, "Добро пожаловать в Herchik Smart Money AI бот 💸")
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
 
-# Простой ответ на текст
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    bot.send_message(message.chat.id, f"Вы написали: {message.text}")
+@dp.message_handler(commands=['start'])
+async def send_welcome(message: types.Message):
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(KeyboardButton("💎 Купить доступ"), KeyboardButton("📚 Курсы"))
+    await message.reply("Добро пожаловать в Herchik Smart Money AI!", reply_markup=keyboard)
 
-# Webhook обработка
-@app.route('/', methods=['POST'])
-def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return '', 200
-    else:
-        return '!', 403
+@dp.message_handler(lambda message: message.text == "💎 Купить доступ")
+async def buy_access(message: types.Message):
+    await message.answer("Выберите тариф: \n1 месяц — 99,000 сум\n3 месяца — 199,000 сум\nПожизненно — 499,000 сум\n\n💳 Доступные оплаты:\n• Payme\n• Click\n• USDT (TRC20)")
+
+@dp.message_handler(lambda message: message.text == "📚 Курсы")
+async def send_courses(message: types.Message):
+    await message.answer("🎓 Курсы в разработке. Скоро появятся видеоуроки!")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
